@@ -224,7 +224,9 @@ class WinterImage:
                 va="center",
             )
 
-            ax0.imshow(image, origin="lower", cmap=cmap, norm=norm, *args, **kwargs)
+            individual_plot = ax0.imshow(
+                image, origin="lower", cmap=cmap, norm=norm, *args, **kwargs
+            )
             ax0.set_xlabel("X [pixels]")
             ax0.set_ylabel("Y [pixels]")
 
@@ -240,7 +242,7 @@ class WinterImage:
             # source: https://stackoverflow.com/questions/32462881/add-colorbar-to-existing-axis
             divider = make_axes_locatable(ax0)
             cax = divider.append_axes("right", size="5%", pad=0.05)
-            fig.colorbar(im, cax=cax, orientation="vertical")
+            fig.colorbar(individual_plot, cax=cax, orientation="vertical")
 
         if savepath is not None:
             plt.savefig(savepath)
