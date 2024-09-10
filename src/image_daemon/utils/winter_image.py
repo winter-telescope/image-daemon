@@ -10,6 +10,9 @@ deciding automatically whether each sensor is in a well-behaved state.
 @author: nlourie
 """
 
+from astropy.io import fits
+from image_daemon.paths import BASEDIR
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import logging
 import os
 import re
@@ -18,9 +21,7 @@ import astropy.visualization
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from astropy.io import fits
-from image_daemon.paths import BASEDIR
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 
 matplotlib.rcParams["text.usetex"] = False
 

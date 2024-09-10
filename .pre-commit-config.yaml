@@ -28,17 +28,18 @@ repos:
 #          ]
 #        verbose: true
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.4
+  # Ruff version.
+  rev: v0.6.4
   hooks:
+    # Run the linter.
     - id: ruff
-      #files: "^backend/"
-    ###### Relevant part below ######
-    - id: ruff
-      args: ["check", "--select", "I", "--fix"]
-      #files: "^backend/"
-    ###### Relevant part above ######
+    # Run the formatter.
     - id: ruff-format
-      #files: "^backend/"
+      
+    # Sort the imports
+    #- id: ruff
+    #  args: ["check", "--select", "I", "--fix"]
+
 -   repo: local
     hooks:
       - id: poetry-check
