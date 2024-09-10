@@ -224,9 +224,7 @@ class WinterImage:
                 va="center",
             )
 
-            im = ax0.imshow(
-                image, origin="lower", cmap=cmap, norm=norm, *args, **kwargs
-            )
+            ax0.imshow(image, origin="lower", cmap=cmap, norm=norm, *args, **kwargs)
             ax0.set_xlabel("X [pixels]")
             ax0.set_ylabel("Y [pixels]")
 
@@ -274,88 +272,88 @@ class WinterImage:
         return img  # , header
 
 
-if __name__ == "__main__":
+def validate_image(
+    mef_file_path, template_path, addrs=None, comment="", plot=True, savepath=None
+):
+    """
+    compare the image specified to the template images and decide if it is
+    in good shape. return a dictionary of the addresses and whether they're
+    "okay" or suspicious and a reboot is merited.
+    """
+    results = {}
+    cmaps = {}
+    bad_chans = []
+    good_chans = []
 
-    def validate_image(
-        mef_file_path, template_path, addrs=None, comment="", plot=True, savepath=None
-    ):
-        """
-        compare the image specified to the template images and decide if it is
-        in good shape. return a dictionary of the addresses and whether they're
-        "okay" or suspicious and a reboot is merited.
-        """
-        results = {}
-        cmaps = {}
-        bad_chans = []
-        good_chans = []
+    # load the data
+    test_data = WinterImage(mef_file_path)
 
-        # load the data
-        test_data = WinterImage(mef_file_path)
+    template_data = WinterImage(template_path)
 
-        template_data = WinterImage(template_path)
+    # this was the old way: cycle through all layers in the template
+    # all_addrs = self.template_data._layer_by_addr
 
-        # this was the old way: cycle through all layers in the template
-        # all_addrs = self.template_data._layer_by_addr
+    # instead:
+    # cycle through all layers in the test data. ignore any offline sensors
+    all_addrs = test_data.imgs.keys()
 
-        # instead:
-        # cycle through all layers in the test data. ignore any offline sensors
-        all_addrs = test_data.imgs.keys()
+    if addrs is None:
+        addrs = all_addrs
 
-        if addrs is None:
-            addrs = all_addrs
+    # now loop through all the images and evaluate
+    for addr in all_addrs:
+        if addr in addrs:
+            data = np.abs(1 - (test_data.imgs[addr] / template_data.imgs[addr]))
 
-        # now loop through all the images and evaluate
-        for addr in all_addrs:
-            if addr in addrs:
-                data = np.abs(1 - (test_data.imgs[addr] / template_data.imgs[addr]))
+            std = np.std(data)
+            mean = np.average(data)
 
-                std = np.std(data)
-                mean = np.average(data)
+            if (std > 0.5) or (mean > 0.1):
+                # image is likely bad!!
+                okay = False
+                cmaps.update({addr: "Reds"})
+                bad_chans.append(addr)
+            else:
+                okay = True
+                cmaps.update({addr: "gray"})
+                good_chans.append(addr)
 
-                if (std > 0.5) or (mean > 0.1):
-                    # image is likely bad!!
-                    okay = False
-                    cmaps.update({addr: "Reds"})
-                    bad_chans.append(addr)
-                else:
-                    okay = True
-                    cmaps.update({addr: "gray"})
-                    good_chans.append(addr)
-
-                results.update(
-                    {
-                        addr: {
-                            "okay": okay,
-                            "mean": float(mean),
-                            "std": float(std),
-                        }
+            results.update(
+                {
+                    addr: {
+                        "okay": okay,
+                        "mean": float(mean),
+                        "std": float(std),
                     }
-                )
-            else:
-                # cmaps.append("gray")
-                pass
-
-        # print(f'cmaps = {cmaps}')
-
-        # make an easy place to grab all the good and bad channels
-        results.update({"bad_chans": bad_chans, "good_chans": good_chans})
-
-        # now plot the result
-        if plot:
-            if len(bad_chans) == 0:
-                suptitle = "No Bad Channels!"
-            else:
-                suptitle = f"Bad Channel(s): {bad_chans}"
-            # title= f"\Huge{{{suptitle}}}\n{testdata.filename}"
-            title = f"{suptitle}\n{test_data.filename}"
-            if comment != "":
-                title += f"\n{comment}"
-            test_data.plot_mosaic(
-                cmap=cmaps, title=title, norm_by="chan", savepath=savepath
+                }
             )
+        else:
+            # cmaps.append("gray")
+            pass
 
-        return results
+    # print(f'cmaps = {cmaps}')
 
+    # make an easy place to grab all the good and bad channels
+    results.update({"bad_chans": bad_chans, "good_chans": good_chans})
+
+    # now plot the result
+    if plot:
+        if len(bad_chans) == 0:
+            suptitle = "No Bad Channels!"
+        else:
+            suptitle = f"Bad Channel(s): {bad_chans}"
+        # title= f"\Huge{{{suptitle}}}\n{testdata.filename}"
+        title = f"{suptitle}\n{test_data.filename}"
+        if comment != "":
+            title += f"\n{comment}"
+        test_data.plot_mosaic(
+            cmap=cmaps, title=title, norm_by="chan", savepath=savepath
+        )
+
+    return results
+
+
+if __name__ == "__main__":
     # template image
     template_path = os.path.join(data_dir, "test", "master_bias.fits")
     template_im = WinterImage(data=template_path)
