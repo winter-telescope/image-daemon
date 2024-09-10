@@ -1,48 +1,47 @@
-default_language_version:
-    python: python3.12
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  # Pre-commit hooks for basic checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
--   repo: local
+      - id: check-yaml
+      - id: end-of-file-fixer
+
+  # Black official pre-commit hook (instead of local)
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
     hooks:
-    -   id: black
-        name: black
-        entry: black
-        language: system
-        types: [ python ]
--   repo: local
+      - id: black
+        language_version: python3.12
+
+  # Pylint as a local hook
+  - repo: local
     hooks:
       - id: pylint
-        name: pylint [mandatory]
+        name: pylint [full]
         entry: pylint
         language: system
         types: [python]
         args:
           [
-            "--disable=missing-function-docstring,missing-module-docstring,missing-class-docstring",
-            "-rn", # Only display messages
-            #"-sn", # Don't display the score
+            "--exit-zero"
           ]
         verbose: true
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.6.4
-  hooks:
-    # Run the linter.
-    - id: ruff
-    # Run the formatter.
-    - id: ruff-format
 
-- repo: local
-  hooks:
-    - id: poetry-check
-      name: poetry-check
-      description: run poetry check to validate config
-      entry: poetry check
-      language: python
-      language_version: python3
-      pass_filenames: false
-      files: ^pyproject.toml$
+  # Ruff for linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.4
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
+  # Poetry check as a local hook
+  - repo: local
+    hooks:
+      - id: poetry-check
+        name: poetry-check
+        description: run poetry check to validate config
+        entry: poetry check
+        language: python
+        pass_filenames: false
+        files: ^pyproject.toml$
+        language_version: python3.12
