@@ -162,10 +162,10 @@ class WinterImage:
         cbar=False,
         cmap="gray",
         norm_by="full",
-        post_to_slack=False,
+        post_to_slack=False,  # pylint: disable=unused-argument
         savepath=None,
-        *args,
-        **kwargs,
+        *args,  # pylint: disable=unused-argument
+        **kwargs,  # pylint: disable=unused-argument
     ):
         aspect_ratio = 1920 / 1080
         w = 3
