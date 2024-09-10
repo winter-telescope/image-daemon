@@ -6,12 +6,15 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
 
-  # Black official pre-commit hook (instead of local)
-  - repo: https://github.com/psf/black
-    rev: 24.8.0
+  - repo: local
     hooks:
       - id: black
-        language_version: python3.12
+        name: black
+        description: Run black to format code
+        entry: black # or should it be poetry run black
+        language: python
+        types: [python]
+
 
   # Pylint as a local hook
   - repo: local
