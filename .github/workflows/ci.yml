@@ -1,0 +1,53 @@
+# .github/workflows/ci.yml
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+
+      # Install Poetry
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
+      # Install dependencies using Poetry
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      # Lint the code using pylint
+      - name: Lint with pylint
+        run: |
+          poetry run pylint src
+
+      # Run Ruff for fast linting
+      - name: Run Ruff
+        run: |
+          poetry run ruff .
+
+      # Format code with Black
+      - name: Format with Black
+        run: |
+          poetry run black --check .
+
+      # Run tests with pytest
+      - name: Run tests
+        run: |
+          poetry run pytest

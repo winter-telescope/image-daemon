@@ -1,0 +1,51 @@
+default_language_version:
+    python: python3.12
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+-   repo: local
+    hooks:
+    -   id: black
+        name: black
+        entry: black
+        language: system
+        types: [ python ]
+#-   repo: local
+#    hooks:
+#      - id: pylint
+#        name: pylint [mandatory]
+#        entry: pylint
+#        language: system
+#        types: [python]
+#        args:
+#          [
+#            "--disable=missing-function-docstring,missing-module-docstring,missing-class-docstring",
+#            "-rn", # Only display messages
+#            #"-sn", # Don't display the score
+#          ]
+#        verbose: true
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.4.4
+  hooks:
+    - id: ruff
+      #files: "^backend/"
+    ###### Relevant part below ######
+    - id: ruff
+      args: ["check", "--select", "I", "--fix"]
+      #files: "^backend/"
+    ###### Relevant part above ######
+    - id: ruff-format
+      #files: "^backend/"
+-   repo: local
+    hooks:
+      - id: poetry-check
+        name: poetry-check
+        description: run poetry check to validate config
+        entry: poetry check
+        language: python
+        language_version: python3
+        pass_filenames: false
+        files: ^pyproject.toml$
