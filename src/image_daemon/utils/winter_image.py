@@ -10,9 +10,6 @@ deciding automatically whether each sensor is in a well-behaved state.
 @author: nlourie
 """
 
-from astropy.io import fits
-from image_daemon.paths import BASEDIR
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import logging
 import os
 import re
@@ -21,7 +18,10 @@ import astropy.visualization
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from astropy.io import fits
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+from image_daemon.paths import BASEDIR
 
 matplotlib.rcParams["text.usetex"] = False
 
@@ -246,6 +246,7 @@ class WinterImage:
 
         if savepath is not None:
             plt.savefig(savepath)
+        plt.show()
 
     def get_img(self, chan, index_by="addr"):
         """
