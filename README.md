@@ -18,3 +18,11 @@ this project uses poetry to manage the packages. Set it up this way:
 conda install poetry -c conda-forge`
 poetry install
 ```
+
+After this is set up, install the library in your new conda environment. From inside the `image-daemon` directory:
+
+```shell
+python -m pip install -e .
+```
+
+where `-e` keeps the installed version up to date if you make edits to the code within the repository.

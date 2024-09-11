@@ -36,22 +36,14 @@ class WinterImage:
     A class to handle the WINTER camera data and headers.
 
     Attributes:
-        filepath (str): The path of the image file.
-        filename (str): The name of the image file.
-        comment (str): Additional comments about the image.
-        logger (Optional[logging.Logger]): Logger for logging messages.
-        verbose (bool): Flag to control verbosity of logs.
-        imgs (Dict[str, np.ndarray]): Dictionary holding sub-images keyed by address.
-        headers (List[Any]): List of headers for each sub-image.
-        header (fits.Header): Top-level FITS header.
-        _mef_addr_order (List[str]): Order of MEF addresses.
-        _board_id_order (List[int]): Order of board IDs.
-        _layer_by_addr (Dict[str, int]): Mapping from address to layer index.
-        _layer_by_board_id (Dict[int, int]): Mapping from board ID to layer index.
-        _board_id_by_addr (Dict[str, int]): Mapping from address to board ID.
-        _addr_by_board_id (Dict[int, str]): Mapping from board ID to address.
-        _rowcol_locs (List[tuple[int, int]]): Row and column locations for subplots.
-        _rowcol_locs_by_addr (Dict[str, tuple[int, int]]): Mapping from address to subplot locations.
+        filepath: Path to the image file.
+        filename: Name of the image file.
+        comment: Additional comments about the image.
+        logger: Logger instance for logging messages.
+        verbose: Flag to control verbosity of logs.
+        imgs: Dictionary holding sub-images keyed by address.
+        headers: List of headers for each sub-image.
+        header: Top-level FITS header.
     """
 
     def __init__(
@@ -65,15 +57,13 @@ class WinterImage:
         """
         Initializes the WinterImage object and loads the image or data.
 
-        Args:
-            data (Union[str, np.ndarray]): File path to a FITS file or a numpy array of image data.
-            headers (Optional[Dict[str, Any]], optional): Dictionary of headers corresponding to the image layers. Defaults to None.
-            comment (str, optional): Additional comments about the image. Defaults to "".
-            logger (Optional[logging.Logger], optional): Logger instance for logging. Defaults to None.
-            verbose (bool, optional): If True, enables verbose logging. Defaults to False.
+        :param data: File path to a FITS file or a numpy array of image data.
+        :param headers: Dictionary of headers corresponding to the image layers. Defaults to None.
+        :param comment: Additional comments about the image. Defaults to an empty string.
+        :param logger: Logger instance for logging. Defaults to None.
+        :param verbose: Enables verbose logging if True. Defaults to False.
 
-        Raises:
-            ValueError: If the input data format is not a string or a numpy array.
+        :raises ValueError: If the input data format is invalid.
         """
         self.filepath: str = ""
         self.filename: str = ""
@@ -120,11 +110,10 @@ class WinterImage:
 
     def load_image(self, mef_file_path: str, comment: str = "") -> None:
         """
-        Loads the data from a MEF FITS file as a numpy array.
+        Loads the data from a MEF FITS file into a numpy array.
 
-        Args:
-            mef_file_path (str): The file path to the MEF FITS file.
-            comment (str, optional): Additional comments about the image. Defaults to "".
+        :param mef_file_path: The file path to the MEF FITS file.
+        :param comment: Additional comments about the image. Defaults to an empty string.
         """
         self.filepath = mef_file_path
         self.filename = os.path.basename(self.filepath)
@@ -133,35 +122,28 @@ class WinterImage:
         self.headers = []
 
         with fits.open(self.filepath) as hdu:
-            self.header = hdu[0].header
-
             for ext in hdu[1:]:
-                datasec_str: str = ext.header["DATASEC"][1:-1]
-                datasec: np.ndarray = np.array(re.split(r"[,:]", datasec_str)).astype(
-                    int
-                )
-                data: np.ndarray = ext.data[
-                    datasec[2] : datasec[3], datasec[0] : datasec[1]
-                ]
+                datasec_str = ext.header["DATASEC"][1:-1]
+                datasec = np.array(re.split(r"[,:]", datasec_str)).astype(int)
+                data = ext.data[datasec[2] : datasec[3], datasec[0] : datasec[1]]
 
-                addr: Optional[str] = ext.header.get("ADDR", None)
+                addr = ext.header.get("ADDR", None)
                 if addr in self._mef_addr_order:
                     self.imgs[addr] = data
                 else:
-                    boardid: Optional[int] = ext.header.get("BOARD_ID", None)
+                    boardid = ext.header.get("BOARD_ID", None)
                     if boardid in self._board_id_order:
-                        addr_mapped: str = self._addr_by_board_id[boardid]
+                        addr_mapped = self._addr_by_board_id[boardid]
                         self.imgs[addr_mapped] = data
 
     def log(self, msg: str, level: int = logging.INFO) -> None:
         """
         Logs a message with the specified logging level.
 
-        Args:
-            msg (str): The message to log.
-            level (int, optional): The logging level. Defaults to logging.INFO.
+        :param msg: The message to log.
+        :param level: The logging level (e.g., logging.INFO). Defaults to logging.INFO.
         """
-        formatted_msg: str = f"WinterImage {msg}"
+        formatted_msg = f"WinterImage {msg}"
 
         if self.logger is None:
             print(formatted_msg)
@@ -176,9 +158,8 @@ class WinterImage:
         """
         Loads image data from a dictionary of images.
 
-        Args:
-            imgs_dict (Dict[str, np.ndarray]): Dictionary of images keyed by address.
-            headers_dict (Optional[Dict[str, Any]], optional): Dictionary of headers for each image. Defaults to None.
+        :param imgs_dict: Dictionary of images keyed by address.
+        :param headers_dict: Dictionary of headers for each image. Defaults to None.
         """
         self.imgs = imgs_dict
         if headers_dict is None:
@@ -194,43 +175,40 @@ class WinterImage:
         norm_by: str = "full",
         post_to_slack: bool = False,  # pylint: disable=unused-argument
         savepath: Optional[str] = None,
-        *args: Any,
+        *args: Any,  # pylint: disable=keyword-arg-before-vararg
         **kwargs: Any,
     ) -> None:
         """
-        Plots a mosaic of sub-images with optional color bar and color map.
+        Plots a mosaic of sub-images with an optional color bar and color map.
 
-        Args:
-            title (Optional[str], optional): Title of the plot. Defaults to None.
-            cbar (bool, optional): Whether to add a color bar. Defaults to False.
-            cmap (Union[str, Dict[str, str]], optional): Colormap or a dictionary of colormaps by address. Defaults to "gray".
-            norm_by (str, optional): Normalization method ("full", "sensor", or "chan"). Defaults to "full".
-            post_to_slack (bool, optional): Not used, but passed as an argument. Defaults to False.
-            savepath (Optional[str], optional): Path to save the plotted mosaic. Defaults to None.
-            *args (Any): Additional positional arguments passed to `imshow`.
-            **kwargs (Any): Additional keyword arguments passed to `imshow`.
+        :param title: The title of the plot. Defaults to None.
+        :param cbar: Whether to add a color bar. Defaults to False.
+        :param cmap: Colormap or a dictionary of colormaps by address. Defaults to "gray".
+        :param norm_by: Normalization method ("full", "sensor", or "chan"). Defaults to "full".
+        :param post_to_slack: Unused argument. Defaults to False.
+        :param savepath: Path to save the plotted mosaic. Defaults to None.
+        :param args: Additional positional arguments passed to `imshow`.
+        :param kwargs: Additional keyword arguments passed to `imshow`.
         """
-        aspect_ratio: float = 1920 / 1080
-        w: float = 3
-        h: float = w / aspect_ratio
+        aspect_ratio = 1920 / 1080
+        w = 3
+        h = w / aspect_ratio
 
         fig, axarr = plt.subplots(3, 2, figsize=(4 * h, 2.0 * w))
 
         # Combine all the data to figure out the full-image normalization
-        alldata: np.ndarray = np.concatenate(
-            [img.flatten() for img in self.imgs.values()]
-        )
+        alldata = np.concatenate([img.flatten() for img in self.imgs.values()])
 
         for addr in self._mef_addr_order:
             if addr in self.imgs:
-                image: np.ndarray = self.imgs[addr]
+                image = self.imgs[addr]
                 # Rotate starboard images by 180 degrees
                 if addr.startswith("s"):
                     image = np.rot90(image, 2)
             else:
                 image = np.zeros((1081, 1921))
 
-            rowcol: tuple[int, int] = self._rowcol_locs_by_addr[addr]
+            rowcol = self._rowcol_locs_by_addr[addr]
             row, col = rowcol
 
             if norm_by.lower() == "full":
@@ -248,7 +226,7 @@ class WinterImage:
             ax0 = axarr[row, col]
 
             if isinstance(cmap, str):
-                current_cmap: str = cmap
+                current_cmap = cmap
             elif isinstance(cmap, dict):
                 current_cmap = cmap.get(addr, "gray")
             else:
@@ -291,18 +269,14 @@ class WinterImage:
         """
         Retrieves a sub-image based on the specified channel and indexing method.
 
-        Args:
-            chan (Union[str, int]): The channel identifier, either by address (str) or board ID (int).
-            index_by (str, optional): How to index the channel, either by 'addr', 'board_id', or 'layer'. Defaults to "addr".
-
-        Raises:
-            ValueError: If the indexing scheme is not one of 'addr', 'board_id', or 'layer'.
-            KeyError: If the specified channel does not exist.
-
-        Returns:
-            np.ndarray: The requested sub-image.
+        :param chan: The channel identifier, either by address (str) or board ID (int).
+        :param index_by: How to index the channel, either by 'addr', 'board_id', or 'layer'.
+                         Defaults to "addr".
+        :return: The requested sub-image.
+        :raises ValueError: If the indexing scheme is not one of 'addr', 'board_id', or 'layer'.
+        :raises KeyError: If the specified channel does not exist.
         """
-        index_by_lower: str = index_by.lower()
+        index_by_lower = index_by.lower()
         addr: Optional[str] = None
 
         if index_by_lower in ["name", "addr"]:
@@ -334,9 +308,9 @@ class WinterImage:
             )
 
         try:
-            img: np.ndarray = self.imgs[addr]
-        except KeyError:
-            raise KeyError(f"Image for address '{addr}' not found.")
+            img = self.imgs[addr]
+        except KeyError as e:
+            raise KeyError(f"Image for address '{addr}' not found.") from e
 
         return img
 
@@ -352,22 +326,20 @@ def validate_image(
     """
     Compares the specified MEF FITS image to a template and determines the health of each sensor.
 
-    Args:
-        mef_file_path (str): Path to the MEF FITS file to validate.
-        template_path (str): Path to the template MEF FITS file.
-        addrs (Optional[List[str]], optional): List of addresses to validate. If None, all addresses in the test data are validated. Defaults to None.
-        comment (str, optional): Additional comments to include in the plot title. Defaults to "".
-        plot (bool, optional): Whether to generate and display a plot of the validation results. Defaults to True.
-        savepath (Optional[str], optional): Path to save the plotted validation results. If None, the plot is not saved. Defaults to None.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing validation results, including:
-            - Each address with a sub-dictionary containing:
-                - "okay" (bool): Whether the sensor is in a good state.
-                - "mean" (float): Mean of the deviation from the template.
-                - "std" (float): Standard deviation of the deviation from the template.
-            - "bad_chans" (List[str]): List of addresses with problematic sensors.
-            - "good_chans" (List[str]): List of addresses with well-behaved sensors.
+    :param mef_file_path: Path to the MEF FITS file to validate.
+    :param template_path: Path to the template MEF FITS file.
+    :param addrs: List of addresses to validate. If None, all addresses in the test data are validated.
+                  Defaults to None.
+    :param comment: Additional comments to include in the plot title. Defaults to an empty string.
+    :param plot: Whether to generate and display a plot of the validation results. Defaults to True.
+    :param savepath: Path to save the plotted validation results. If None, the plot is not saved. Defaults to None.
+    :return: Dictionary containing validation results, including:
+             - Each address with a sub-dictionary containing:
+                 - "okay" (bool): Whether the sensor is in a good state.
+                 - "mean" (float): Mean of the deviation from the template.
+                 - "std" (float): Standard deviation of the deviation from the template.
+             - "bad_chans" (List[str]): List of addresses with problematic sensors.
+             - "good_chans" (List[str]): List of addresses with well-behaved sensors.
     """
     results: Dict[str, Any] = {}
     cmaps: Dict[str, str] = {}
@@ -379,7 +351,7 @@ def validate_image(
     template_data = WinterImage(data=template_path)
 
     # Retrieve all addresses from the test data
-    all_addrs: List[str] = list(test_data.imgs.keys())
+    all_addrs = list(test_data.imgs.keys())
 
     if addrs is None:
         addrs = all_addrs
@@ -411,12 +383,12 @@ def validate_image(
                 ratio[~np.isfinite(ratio)] = 0  # Set inf and NaN to 0
                 data = np.abs(1 - ratio)
 
-            std: float = np.std(data)
-            mean: float = np.mean(data)
+            std = np.std(data)
+            mean = np.mean(data)
 
             if (std > 0.5) or (mean > 0.1):
                 # Image is likely bad
-                okay: bool = False
+                okay = False
                 cmaps[addr] = "Reds"
                 bad_chans.append(addr)
             else:
@@ -455,23 +427,15 @@ def validate_image(
 
 if __name__ == "__main__":
     # Template image
-    template_path = os.path.join(data_dir, "test", "master_bias.fits")
-    template_im = WinterImage(data=template_path)
+    template_data_path = os.path.join(data_dir, "test", "master_bias.fits")
+    template_im = WinterImage(data=template_data_path)
     template_im.plot_mosaic()
-
-    # # Partial image (commented out)
-    # imgpath = os.path.join(topdir, 'data', 'test', 'test_pa_pb_pc_mef.fits')
-    # im = WinterImage(data=imgpath)
-    # # im.plot_mosaic()
-    # result = validate_image(imgpath, template_path, plot=True)
-    # print(result)
 
     # Full image
     imgpath = os.path.join(data_dir, "test", "test_full_mef.fits")
     im = WinterImage(data=imgpath)
-    # im.plot_mosaic()
     result = validate_image(
-        mef_file_path=imgpath, template_path=template_path, plot=True
+        mef_file_path=imgpath, template_path=template_data_path, plot=True
     )
     print(f"bad chans:  {result['bad_chans']}")
     print(f"good chans: {result['good_chans']}")
