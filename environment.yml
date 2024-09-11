@@ -1,0 +1,17 @@
+name: my_project_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy <2 
+  - pandas
+  - pip
+  - pip:
+      - -e .  # Install your package in editable mode
+  - pytest
+  - black
+  - pylint
+  - ruff
+  - pyro5
+  - slack_sdk

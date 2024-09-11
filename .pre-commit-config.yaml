@@ -1,0 +1,50 @@
+repos:
+  # Pre-commit hooks for basic checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        description: Run black to format code
+        entry: black # or should it be poetry run black
+        language: python
+        types: [python]
+
+
+  # Pylint as a local hook
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint [full]
+        entry: pylint
+        language: system
+        types: [python]
+        args:
+          [
+            "--exit-zero"
+          ]
+        verbose: true
+
+  # Ruff for linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.4
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
+  # Poetry check as a local hook
+  - repo: local
+    hooks:
+      - id: poetry-check
+        name: poetry-check
+        description: run poetry check to validate config
+        entry: poetry check
+        language: python
+        pass_filenames: false
+        files: ^pyproject.toml$
+        language_version: python3.12
