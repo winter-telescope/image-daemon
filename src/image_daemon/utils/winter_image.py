@@ -175,7 +175,6 @@ class WinterImage:
         norm_by: str = "full",
         post_to_slack: bool = False,  # pylint: disable=unused-argument
         savepath: Optional[str] = None,
-        *args: Any,  # pylint: disable=keyword-arg-before-vararg
         **kwargs: Any,
     ) -> None:
         """
@@ -187,7 +186,6 @@ class WinterImage:
         :param norm_by: Normalization method ("full", "sensor", or "chan"). Defaults to "full".
         :param post_to_slack: Unused argument. Defaults to False.
         :param savepath: Path to save the plotted mosaic. Defaults to None.
-        :param args: Additional positional arguments passed to `imshow`.
         :param kwargs: Additional keyword arguments passed to `imshow`.
         """
         aspect_ratio = 1920 / 1080
@@ -243,7 +241,7 @@ class WinterImage:
             )
 
             individual_plot = ax0.imshow(
-                image, origin="lower", cmap=current_cmap, norm=norm, *args, **kwargs
+                image, origin="lower", cmap=current_cmap, norm=norm, **kwargs
             )
             ax0.set_xlabel("X [pixels]")
             ax0.set_ylabel("Y [pixels]")
